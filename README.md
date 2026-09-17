@@ -3,6 +3,23 @@
 > **Next-Generation Autonomous Profile Authenticity & Deepfake Forensic Platform**  
 > Developed for advanced cyber-defense, OSINT analysis, and social media fraud detection.
 
+<p align="center">
+  <img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Streamlit Cloud" />
+  <img src="https://img.shields.io/badge/Python-3.14%2B-3776AB.svg?logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/OpenCV-Computer%20Vision-5C3EE8.svg?logo=opencv&logoColor=white" alt="OpenCV" />
+  <img src="https://img.shields.io/badge/Scikit--Learn-Ensemble%20ML-F7931E.svg?logo=scikitlearn&logoColor=white" alt="Scikit-Learn" />
+  <img src="https://img.shields.io/badge/Accuracy-96.2%25-10B981.svg" alt="Accuracy" />
+  <img src="https://img.shields.io/badge/ROC--AUC-0.988-00F2FE.svg" alt="ROC-AUC" />
+</p>
+
+---
+
+## 🖥️ Live Dashboard Preview
+
+<p align="center">
+  <img src="dashboard_preview.png" alt="VeriProfile AI Cyber Dashboard" width="100%" />
+</p>
+
 ---
 
 ## 🌟 Overview & What's New
