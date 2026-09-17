@@ -9,8 +9,21 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier,
 from sklearn.model_selection import train_test_split
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), 'advanced_model.pkl')
-CASCADE_PATH = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
-EYE_CASCADE_PATH = cv2.data.haarcascades + 'haarcascade_eye.xml'
+
+def get_haarcascade_path(xml_name):
+    # 1. Bundled repo directory
+    bundled_p = os.path.join(os.path.dirname(__file__), 'data', xml_name)
+    if os.path.exists(bundled_p):
+        return bundled_p
+    # 2. cv2.data haarcascades if available
+    try:
+        if hasattr(cv2, 'data') and hasattr(cv2.data, 'haarcascades'):
+            p = os.path.join(cv2.data.haarcascades, xml_name)
+            if os.path.exists(p):
+                return p
+    except Exception:
+        pass
+    return xml_name
 
 SPAM_KEYWORDS = [
     'dm for promo', 'crypto', 'invest', 'forex', 'telegram', 'whatsapp', 'giveaway',
@@ -19,8 +32,16 @@ SPAM_KEYWORDS = [
 
 class ProfileForensicEngine:
     def __init__(self):
-        self.face_cascade = cv2.CascadeClassifier(CASCADE_PATH)
-        self.eye_cascade = cv2.CascadeClassifier(EYE_CASCADE_PATH)
+        self.face_cascade = None
+        self.eye_cascade = None
+        try:
+            if hasattr(cv2, 'CascadeClassifier'):
+                face_p = get_haarcascade_path('haarcascade_frontalface_default.xml')
+                self.face_cascade = cv2.CascadeClassifier(face_p)
+                eye_p = get_haarcascade_path('haarcascade_eye.xml')
+                self.eye_cascade = cv2.CascadeClassifier(eye_p)
+        except Exception as e:
+            print(f"Warning: CascadeClassifier init: {e}")
         self.model_bundle = self._load_or_train_model()
 
     def _generate_synthetic_dataset(self, n_samples=5000):
@@ -227,8 +248,13 @@ class ProfileForensicEngine:
             laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
             sharpness = round(float(laplacian_var), 1)
 
-            # Detect faces
-            faces_raw = self.face_cascade.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=5, minSize=(30, 30))
+            # Detect faces safely
+            faces_raw = []
+            if self.face_cascade is not None:
+                try:
+                    faces_raw = self.face_cascade.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=5, minSize=(30, 30))
+                except Exception:
+                    faces_raw = []
             face_count = len(faces_raw)
 
             # Create HUD overlay copy
@@ -263,12 +289,16 @@ class ProfileForensicEngine:
                 cv2.line(hud_img, (x + w, y + h), (x + w, y + h - bracket_len), (0, 242, 255), thick)
 
                 # Detect eyes within face ROI for biometric alignment
-                roi_gray = gray[y:y + h, x:x + w]
-                roi_color = hud_img[y:y + h, x:x + w]
-                eyes = self.eye_cascade.detectMultiScale(roi_gray, 1.1, 3, minSize=(15, 15))
-                for (ex, ey, ew, eh) in eyes:
-                    cv2.circle(roi_color, (ex + ew // 2, ey + eh // 2), max(4, ew // 3), (0, 255, 170), 1)
-                    cv2.circle(roi_color, (ex + ew // 2, ey + eh // 2), 2, (0, 255, 170), -1)
+                if self.eye_cascade is not None:
+                    try:
+                        roi_gray = gray[y:y + h, x:x + w]
+                        roi_color = hud_img[y:y + h, x:x + w]
+                        eyes = self.eye_cascade.detectMultiScale(roi_gray, 1.1, 3, minSize=(15, 15))
+                        for (ex, ey, ew, eh) in eyes:
+                            cv2.circle(roi_color, (ex + ew // 2, ey + eh // 2), max(4, ew // 3), (0, 255, 170), 1)
+                            cv2.circle(roi_color, (ex + ew // 2, ey + eh // 2), 2, (0, 255, 170), -1)
+                    except Exception:
+                        pass
 
                 # HUD Tag
                 ratio_pct = (area / image_area) * 100.0
